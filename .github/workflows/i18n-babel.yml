@@ -28,7 +28,7 @@ jobs:
       - run: pip install babel ${{ inputs.dependencies }}
       - name: Update catalogs
         working-directory: ${{ inputs.working-directory }}
-        run: ${{ command }}
+        run: ${{ inputs.command }}
       - name: Count incomplete translations
         shell: bash
         run: |
