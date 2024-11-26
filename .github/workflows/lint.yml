@@ -1,0 +1,113 @@
+# This workflow can be reused by Python packages, Python repository or non-Python repositories.
+#
+# A repository is a Python...:
+#
+# - package if it contains MANIFEST.in
+# - repository if it contains requirements_dev.txt
+#
+# If it is either, a Python cache is configured, and the standard-maintenance-scripts requirements linter is run.
+#
+# If it is a Python...:
+#
+# - package, then the check-manifest command is run.
+# - repository, then the pip-compile pre-commit hook is run, and any changed files are auto-committed.
+#
+# In all cases, the standard-maintenance-scripts language linters are run.
+name: Lint
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        type: string
+        default: '3.11'
+      standard-maintenance-scripts-extras:
+        description: Sets the STANDARD_MAINTENANCE_SCRIPTS_EXTRAS environment variable for standard-maintenance-scripts' requirements linter.
+        type: string
+      standard-maintenance-scripts-ignore:
+        description: Sets the STANDARD_MAINTENANCE_SCRIPTS_IGNORE environment variable for standard-maintenance-scripts' requirements linter.
+        type: string
+      standard-maintenance-scripts-files:
+        description: Sets the STANDARD_MAINTENANCE_SCRIPTS_FILES environment variable for standard-maintenance-scripts' requirements linter.
+        type: string
+      ocds-noindent:
+        description: Sets the OCDS_NOINDENT environment variable for standard-maintenance-scripts' JSON linter.
+        type: string
+      skip-linter-language:
+        description: Skip standard-maintenance-scripts' language linters.
+        type: boolean
+      skip-linter-requirements:
+        description: Skip standard-maintenance-scripts' requirements linter.
+        type: boolean
+      before-lint:
+        description: Any command to run before linting.
+        type: string
+env:
+  BASEDIR: https://raw.githubusercontent.com/open-contracting/standard-maintenance-scripts/main
+  OCDS_NOINDENT: '${{ inputs.ocds-noindent }}'
+jobs:
+  build:
+    if: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: requirements
+        run: |
+          echo "package=$(echo ${{ hashFiles('MANIFEST.in') }})" >> "$GITHUB_OUTPUT"
+          echo "compile=$(echo ${{ hashFiles('requirements_dev.txt') }})" >> "$GITHUB_OUTPUT"
+
+      # Install Python and configure cache.
+      - if: ${{ !steps.requirements.package && !steps.requirements.compile }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: '${{ inputs.python-version }}'
+      - if: ${{ steps.requirements.package || steps.requirements.compile }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: '${{ inputs.python-version }}'
+          cache: pip
+          cache-dependency-path: "${{ steps.requirements.package && 'pyproject.toml' || '**/requirements*.txt' }}"
+
+      # Pre-lint commands.
+      - if: ${{ inputs.before-lint }}
+        run: ${{ inputs.before-lint }}
+
+      # Run pip-compile pre-commit hook, which requires the network and therefore is skipped on pre-commit.ci.
+      - if: ${{ steps.requirements.compile }}
+        id: changed-files
+        uses: tj-actions/changed-files@v45
+      - if: ${{ steps.requirements.compile }}
+        uses: pre-commit/action@v3.0.1
+        continue-on-error: true
+        with:
+          extra_args: pip-compile --files ${{ steps.changed-files.outputs.all_changed_files }}
+      - if: ${{ steps.requirements.compile }}
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: '[github-actions] pre-commit autoupdate'
+
+      # Run standard-maintenance-scripts language linters.
+      - if {{ !inputs.skip-linter-language || !inputs.skip-linter-requirements }}
+        shell: bash
+        run: curl -s -S --retry 3 $BASEDIR/tests/install.sh | bash -
+      - if {{ !inputs.skip-linter-language }}
+        shell: bash
+        run: curl -s -S --retry 3 $BASEDIR/tests/script.sh | bash -
+
+      # Run standard-maintenance-scripts requirements linter.
+      - if: ${{ !inputs.skip-linter-requirements && steps.requirements.package }}
+        run: pip install .[${{ inputs.standard-maintenance-scripts-extras && format('{0},', inputs.standard-maintenance-scripts-extras) || '' }}test]
+      - if: ${{ !inputs.skip-linter-requirements && steps.requirements.compile }}
+        run: pip install -r requirements_dev.txt
+      - if: ${{ !inputs.skip-linter-requirements && (steps.requirements.package || steps.requirements.compile) }}
+        env:
+          STANDARD_MAINTENANCE_SCRIPTS_EXTRAS: ${{ inputs.standard-maintenance-scripts-extras }}
+          STANDARD_MAINTENANCE_SCRIPTS_IGNORE: ${{ inputs.standard-maintenance-scripts-ignore }}
+          STANDARD_MAINTENANCE_SCRIPTS_FILES: ${{ inputs.standard-maintenance-scripts-files }}
+        run: pytest /tmp/test_requirements.py
+
+      # Run check-manifest.
+      - if: ${{ steps.requirements.package }}
+        run: pip install --upgrade check-manifest
+      - if: ${{ steps.requirements.package }}
+        run: check-manifest
