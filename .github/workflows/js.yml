@@ -3,8 +3,9 @@ on:
   workflow_call:
     inputs:
       filenames:
+        description: Space-separated list of filenames to which to limit Biome.
         type: string
-        required: true
+        defailt: '.'
 jobs:
   build:
     if: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository }}

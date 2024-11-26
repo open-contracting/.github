@@ -6,9 +6,11 @@ on:
         type: string
         default: '3.11'
       source:
+        description: The source language, to ignore when searching for missing translations.
         type: string
         default: en
       djangojs:
+        description: Whether to extract messages for the djangojs domain.
         type: boolean
 jobs:
   build:

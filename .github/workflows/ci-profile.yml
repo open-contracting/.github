@@ -3,18 +3,23 @@ on:
   workflow_call:
     inputs:
       path-prefix:
+        description: Sets the PATH_PREFIX environment variable for the deploy-docs.sh script.
         type: string
         required: true
       version:
+        description: Sets the VERSION environment variable for the deploy-docs.sh script.
         type: string
         default: '1.0'
       production-refs:
+        description: Git references for which to set the PRODUCTION environment variable for the deploy-docs.sh script.
         type: string
         default: '[]'
       linkcheck:
+        description: Whether to run `make linkcheck` from Sphinx.
         type: boolean
         default: true
       pytest-options:
+        description: Any command-line options to `pytest`, usually '-W ignore ...'.
         type: string
     secrets:
       private-key:

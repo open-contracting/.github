@@ -3,9 +3,11 @@ on:
   workflow_call:
     inputs:
       ignore:
+        description: Comma-separated list of words to ignore.
         type: string
         required: true
       skip:
+        description: Comma-separated list of files to skip.
         type: string
 jobs:
   build:

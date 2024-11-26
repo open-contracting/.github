@@ -2,16 +2,19 @@ name: Translations
 on:
   workflow_call:
     inputs:
-      command:
-        type: string
-        required: true
       python-version:
         type: string
         default: '3.11'
+      command:
+        description: The command(s) to extract messages and update catalogs.
+        type: string
+        required: true
       working-directory:
+        description: The working directory from which to run the command(s).
         type: string
         default: .
       dependencies:
+        description: Any command-line options or arguments to `pip install`, needed by the command(s).
         type: string
 jobs:
   build:
