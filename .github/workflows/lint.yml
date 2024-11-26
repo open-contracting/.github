@@ -1,18 +1,28 @@
-# This workflow can be reused by Python packages, Python repository or non-Python repositories.
+# This workflow can be reused by Python packages, Python applications or non-Python repositories.
 #
 # A repository is a Python...:
 #
 # - package if it contains MANIFEST.in
-# - repository if it contains requirements_dev.txt
+# - application if it contains requirements_dev.txt
 #
 # If it is either, a Python cache is configured, and the standard-maintenance-scripts requirements linter is run.
 #
 # If it is a Python...:
 #
 # - package, then the check-manifest command is run.
-# - repository, then the pip-compile pre-commit hook is run, and any changed files are auto-committed.
+# - application, then the pip-compile pre-commit hook is run, and any changed files are auto-committed.
 #
 # In all cases, the standard-maintenance-scripts language linters are run.
+#
+# For Python applications, set the permissions:
+#
+# name: Lint
+# on: [push, pull_request]
+# jobs:
+#   lint:
+#     uses: open-contracting/.github/.github/workflows/lint.yml@main
+#     permissions:
+#       contents: write
 name: Lint
 on:
   workflow_call:
