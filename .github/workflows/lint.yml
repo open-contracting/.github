@@ -97,10 +97,10 @@ jobs:
           commit_message: '[github-actions] pre-commit autoupdate'
 
       # Run standard-maintenance-scripts language linters.
-      - if {{ !inputs.skip-linter-language || !inputs.skip-linter-requirements }}
+      - if: ${{ !inputs.skip-linter-language || !inputs.skip-linter-requirements }}
         shell: bash
         run: curl -s -S --retry 3 $BASEDIR/tests/install.sh | bash -
-      - if {{ !inputs.skip-linter-language }}
+      - if: ${{ !inputs.skip-linter-language }}
         shell: bash
         run: curl -s -S --retry 3 $BASEDIR/tests/script.sh | bash -
 
