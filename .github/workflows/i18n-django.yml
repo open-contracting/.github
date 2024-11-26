@@ -1,0 +1,36 @@
+name: Translations
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        default: '3.11'
+        type: string
+      source:
+        default: en
+        type: string
+      djangojs:
+        type: boolean
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '${{ inputs.python-version }} '
+          cache: pip
+          cache-dependency-path: '**/requirements*.txt'
+      - name: Install translate-toolkit
+        run: |
+          sudo apt update
+          sudo apt install gettext translate-toolkit
+      - run: pip install -r requirements.txt
+      - run: python manage.py makemessages -a
+      - if: ${{ inputs.djangojs }}
+        run: python manage.py makemessages -a -d djangojs -i node_modules -i static
+      - name: Count incomplete translations
+        shell: bash
+        run: |
+          output=$(find . -name LC_MESSAGES -not -path "*/${{ inputs.source }}/*" -exec pocount --incomplete --short "{}" +)
+          echo $output
+          [ "$output" = "" ]
