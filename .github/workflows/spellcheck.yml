@@ -3,8 +3,8 @@ on:
   workflow_call:
     inputs:
       ignore:
-        required: true
         type: string
+        required: true
       skip:
         type: string
 jobs:

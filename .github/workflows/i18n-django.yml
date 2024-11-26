@@ -3,11 +3,11 @@ on:
   workflow_call:
     inputs:
       python-version:
+        type: string
         default: '3.11'
-        type: string
       source:
-        default: en
         type: string
+        default: en
       djangojs:
         type: boolean
 jobs:

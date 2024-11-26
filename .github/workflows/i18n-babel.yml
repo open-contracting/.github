@@ -3,14 +3,14 @@ on:
   workflow_call:
     inputs:
       command:
+        type: string
         required: true
-        type: string
       python-version:
+        type: string
         default: '3.11'
-        type: string
       working-directory:
-        default: .
         type: string
+        default: .
       dependencies:
         type: string
 jobs:
