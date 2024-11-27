@@ -42,6 +42,10 @@ on:
       ocds-noindent:
         description: Sets the OCDS_NOINDENT environment variable for standard-maintenance-scripts' JSON linter.
         type: string
+      basedir:
+        description: Sets the BASEDIR environment variable for standard-maintenance-scripts' language linters.
+        type: string
+        default: https://raw.githubusercontent.com/open-contracting/standard-maintenance-scripts/main
       skip-linter-language:
         description: Skip standard-maintenance-scripts' language linters.
         type: boolean
@@ -52,7 +56,7 @@ on:
         description: Any command to run before linting.
         type: string
 env:
-  BASEDIR: https://raw.githubusercontent.com/open-contracting/standard-maintenance-scripts/main
+  BASEDIR: ${{ inputs.basedir }}
   OCDS_NOINDENT: '${{ inputs.ocds-noindent }}'
 jobs:
   build:
