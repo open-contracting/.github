@@ -54,6 +54,9 @@ on:
       before-lint:
         description: Any command to run before linting.
         type: string
+    secrets:
+      personal-access-token:
+        description: The personal access token of a user with admin permissions to this repository, in order to write to protected branches.
 env:
   BASEDIR: ${{ inputs.local-basedir && format('file://{0}', github.workspace) || 'https://raw.githubusercontent.com/open-contracting/standard-maintenance-scripts/main' }}
   OCDS_NOINDENT: '${{ inputs.ocds-noindent }}'
@@ -63,6 +66,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.personal-access-token || github.token }}
 
       - id: requirements
         run: |
