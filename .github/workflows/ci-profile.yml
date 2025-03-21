@@ -50,12 +50,12 @@ jobs:
       - run: pytest -W error ${{ inputs.pytest-options }}
       # Deploy the built documentation to the staging directory.
       - if: ${{ github.event_name == 'push' }}
-        uses: shimataro/ssh-key-action@v2
+        uses: shimataro/ssh-key-action@d4fffb50872869abe2d9a9098a6d9c5aa7d16be4 # v2.7.0
         with:
           key: ${{ secrets.private-key }}
           known_hosts: standard.open-contracting.org ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGveFGTJ9yyObNGDUCUyzyFkm6Kzh3YqIt1qB7B/KU6E
       - if: ${{ github.event_name == 'push' }}
-        uses: bcomnes/netrc-creds@v3
+        uses: bcomnes/netrc-creds@ea8a329dd2c795ccb141d4d202abade005c6624c # v3.0.2
         with:
           machine: standard.open-contracting.org
           login: manage
