@@ -14,7 +14,7 @@
 #
 # In all cases, the standard-maintenance-scripts language linters are run.
 #
-# For Python applications, set the permissions:
+# For Python *applications*, set `contents: write`:
 #
 # name: Lint
 # on: [push, pull_request]
@@ -23,6 +23,22 @@
 #     uses: open-contracting/.github/.github/workflows/lint.yml@main
 #     permissions:
 #       contents: write
+#    secrets:
+#      personal-access-token: ${{ secrets.PAT }}
+#    with:
+#      python-version: '3.10'
+#
+# Otherwise, set `contents: read`:
+#
+# name: Lint
+# on: [push, pull_request]
+# jobs:
+#   lint:
+#     uses: open-contracting/.github/.github/workflows/lint.yml@main
+#     permissions:
+#       contents: read
+#    with:
+#      python-version: '3.10'
 name: Lint
 on:
   workflow_call:
