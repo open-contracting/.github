@@ -92,11 +92,11 @@ jobs:
 
       # Install Python and configure cache.
       - if: ${{ !steps.requirements.package && !steps.requirements.compile }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '${{ inputs.python-version }}'
       - if: ${{ steps.requirements.package || steps.requirements.compile }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '${{ inputs.python-version }}'
           cache: pip
