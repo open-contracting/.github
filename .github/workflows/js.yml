@@ -6,6 +6,10 @@ on:
         description: Space-separated list of filenames to which to limit Biome.
         type: string
         default: '.'
+      lockfile_path:
+        description: Path to the package-lock.json file for lockfile-lint validation.
+        type: string
+        default: 'package-lock.json'
 jobs:
   build:
     if: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository }}
@@ -14,3 +18,5 @@ jobs:
       - uses: actions/checkout@v6
       - uses: biomejs/setup-biome@454fa0d884737805f48d7dc236c1761a0ac3cc13 # v2.6.0
       - run: biome ci --indent-style=space --line-width=119 ${{ inputs.filenames }}
+      - if: ${{ inputs.lockfile_path != 'package-lock.json' || hashFiles('package.json') != '' }}
+        run: npx lockfile-lint --path ${{ inputs.lockfile_path }} --allowed-hosts npm --validate-https
