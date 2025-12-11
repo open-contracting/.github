@@ -145,3 +145,8 @@ jobs:
         run: pip install --upgrade check-manifest
       - if: ${{ steps.requirements.package }}
         run: check-manifest
+    services:
+      httpbin:
+        image: mccutchen/go-httpbin:latest
+        ports:
+          - 8080:8080
