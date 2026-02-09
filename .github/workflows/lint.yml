@@ -25,8 +25,6 @@
 #       contents: write
 #    secrets:
 #      personal-access-token: ${{ secrets.PAT }}
-#    with:
-#      python-version: '3.10'
 #
 # Otherwise, set `contents: read`:
 #
@@ -37,8 +35,6 @@
 #     uses: open-contracting/.github/.github/workflows/lint.yml@main
 #     permissions:
 #       contents: read
-#    with:
-#      python-version: '3.10'
 name: Lint
 on:
   workflow_call:
