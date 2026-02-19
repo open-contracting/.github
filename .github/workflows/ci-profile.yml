@@ -52,7 +52,7 @@ jobs:
       - run: pytest -W error ${{ inputs.pytest-options }}
       # Deploy the built documentation to the staging directory.
       - if: ${{ github.event_name == 'push' }}
-        uses: shimataro/ssh-key-action@d4fffb50872869abe2d9a9098a6d9c5aa7d16be4 # v2.7.0
+        uses: shimataro/ssh-key-action@6b84f2e793b32fa0b03a379cadadec75cc539391 # v2.8.0
         with:
           key: ${{ secrets.private-key }}
           known_hosts: ocp19.open-contracting.org ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGveFGTJ9yyObNGDUCUyzyFkm6Kzh3YqIt1qB7B/KU6E
