@@ -1,6 +1,10 @@
 # Auto-merge pull requests by pre-commit.ci, and by dependabot for non-major version updates only.
 #
-# Callers must set `pull-requests: write` to approve the PR and `contents: write` to merge the PR.
+# Callers must set:
+# - `pull-requests: write` to approve the PR
+# - `contents: write` to merge the PR
+# - `actions: write` to avoid "GraphQL: Pull request refusing to allow a GitHub App to create or update workflow
+#    without `workflows` permission (enablePullRequestAutoMerge)"
 #
 # Callers use the pull_request_target trigger, which is dangerous. Do not add unrelated logic to the caller workflow.
 # https://securitylab.github.com/research/github-actions-preventing-pwn-requests/
