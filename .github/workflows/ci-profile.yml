@@ -57,7 +57,7 @@ jobs:
           key: ${{ secrets.private-key }}
           known_hosts: ocp19.open-contracting.org ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGveFGTJ9yyObNGDUCUyzyFkm6Kzh3YqIt1qB7B/KU6E
       - if: ${{ github.event_name == 'push' }}
-        uses: bcomnes/netrc-creds@ea8a329dd2c795ccb141d4d202abade005c6624c # v3.0.2
+        uses: bcomnes/netrc-creds@5f48abcd603d4fb3378c11e2a2f6067c1e4b4a70 # v4.0.2
         with:
           machine: standard.open-contracting.org
           login: manage
