@@ -54,6 +54,12 @@ on:
       ocds-noindent:
         description: Sets the OCDS_NOINDENT environment variable for standard-maintenance-scripts' JSON linter.
         type: string
+      ocds-schema-exceptions:
+        description: Sets the OCDS_SCHEMA_EXCEPTIONS environment variable (comma-separated) for standard-maintenance-scripts' JSON linter.
+        type: string
+      ocds-extension-paths:
+        description: Sets the OCDS_EXTENSION_PATHS environment variable (comma-separated) for standard-maintenance-scripts' JSON linter.
+        type: string
       local-basedir:
         description: Sets the BASEDIR environment variable for standard-maintenance-scripts' language linters.
         type: boolean
@@ -72,6 +78,8 @@ on:
 env:
   BASEDIR: ${{ inputs.local-basedir && format('file://{0}', github.workspace) || 'https://raw.githubusercontent.com/open-contracting/standard-maintenance-scripts/main' }}
   OCDS_NOINDENT: '${{ inputs.ocds-noindent }}'
+  OCDS_SCHEMA_EXCEPTIONS: '${{ inputs.ocds-schema-exceptions }}'
+  OCDS_EXTENSION_PATHS: '${{ inputs.ocds-non-full-schema-paths }}'
 jobs:
   build:
     if: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository }}
