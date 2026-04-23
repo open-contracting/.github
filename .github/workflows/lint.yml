@@ -78,7 +78,7 @@ on:
 env:
   BASEDIR: ${{ inputs.local-basedir && format('file://{0}', github.workspace) || 'https://raw.githubusercontent.com/open-contracting/standard-maintenance-scripts/main' }}
   OCDS_NOINDENT: '${{ inputs.ocds-noindent }}'
-  OCDS_EXTENSION_PATHS: '${{ inputs.ocds-non-full-schema-paths }}'
+  OCDS_EXTENSION_PATHS: '${{ inputs.ocds-extension-paths }}'
   OCDS_SCHEMA_EXCEPTIONS: '${{ inputs.ocds-schema-exceptions }}'
 jobs:
   build:
