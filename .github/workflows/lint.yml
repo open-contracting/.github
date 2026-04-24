@@ -60,6 +60,9 @@ on:
       ocds-schema-exceptions:
         description: Sets the OCDS_SCHEMA_EXCEPTIONS environment variable (comma-separated) for standard-maintenance-scripts' JSON linter.
         type: string
+      ocds-disallow-null:
+        description: Sets the OCDS_DISALLOW_NULL environment variable for standard-maintenance-scripts' JSON linter.
+        type: boolean
       local-basedir:
         description: Sets the BASEDIR environment variable for standard-maintenance-scripts' language linters.
         type: boolean
@@ -80,6 +83,7 @@ env:
   OCDS_NOINDENT: '${{ inputs.ocds-noindent }}'
   OCDS_EXTENSION_PATHS: '${{ inputs.ocds-extension-paths }}'
   OCDS_SCHEMA_EXCEPTIONS: '${{ inputs.ocds-schema-exceptions }}'
+  OCDS_DISALLOW_NULL: ${{ inputs.ocds-disallow-null && '1' || '' }}
 jobs:
   build:
     if: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository }}
