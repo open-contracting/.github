@@ -54,6 +54,9 @@ on:
       ocds-noindent:
         description: Sets the OCDS_NOINDENT environment variable for standard-maintenance-scripts' JSON linter.
         type: string
+      ocds-no-csv:
+        description: Sets the OCDS_NO_CSV environment variable for standard-maintenance-scripts' CSV linter.
+        type: string
       ocds-extension-paths:
         description: Sets the OCDS_EXTENSION_PATHS environment variable (comma-separated) for standard-maintenance-scripts' JSON linter.
         type: string
@@ -81,6 +84,7 @@ on:
 env:
   BASEDIR: ${{ inputs.local-basedir && format('file://{0}', github.workspace) || 'https://raw.githubusercontent.com/open-contracting/standard-maintenance-scripts/main' }}
   OCDS_NOINDENT: '${{ inputs.ocds-noindent }}'
+  OCDS_NO_CSV: '${{ inputs.ocds-no-csv }}'
   OCDS_EXTENSION_PATHS: '${{ inputs.ocds-extension-paths }}'
   OCDS_SCHEMA_EXCEPTIONS: '${{ inputs.ocds-schema-exceptions }}'
   OCDS_DISALLOW_NULL: ${{ inputs.ocds-disallow-null && '1' || '' }}
