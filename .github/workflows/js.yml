@@ -10,6 +10,10 @@ on:
         description: Path to the package-lock.json file for lockfile-lint validation.
         type: string
         default: 'package-lock.json'
+      lockfile_lint_args:
+        description: Arguments to pass to lockfile-lint after --path.
+        type: string
+        default: '--allowed-hosts npm --validate-https'
 jobs:
   build:
     if: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository }}
@@ -19,4 +23,4 @@ jobs:
       - uses: biomejs/setup-biome@4c91541eaada48f67d7dbd7833600ce162b68f51 # v2.7.1
       - run: biome ci --indent-style=space --line-width=119 ${{ inputs.filenames }}
       - if: ${{ inputs.lockfile_path != 'package-lock.json' || hashFiles('package.json') != '' }}
-        run: npx lockfile-lint --path ${{ inputs.lockfile_path }} --allowed-hosts npm --validate-https
+        run: npx lockfile-lint --path ${{ inputs.lockfile_path }} ${{ inputs.lockfile_lint_args }}
