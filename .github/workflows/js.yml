@@ -7,9 +7,12 @@ on:
         type: string
         default: '.'
       lockfile_path:
-        description: Path to the package-lock.json file for lockfile-lint validation.
+        description: >-
+          Path to the lockfile. Set this if the JavaScript project is in a
+          subdirectory (e.g. frontend/pnpm-lock.yaml). Otherwise, auto-detects
+          pnpm-lock.yaml or package-lock.json in the root directory.
         type: string
-        default: 'package-lock.json'
+        default: ''
       lockfile_lint_args:
         description: Arguments to pass to lockfile-lint after --path.
         type: string
@@ -20,7 +23,63 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.0
+      - name: Detect the JavaScript project's directory, package manager, and lockfile
+        id: setup
+        shell: bash
+        run: |
+          lockfile="${{ inputs.lockfile_path }}"
+          directory=.
+
+          if [ -z "$lockfile" ]; then
+            if [ -f pnpm-lock.yaml ]; then
+              lockfile=pnpm-lock.yaml
+            elif [ -f package-lock.json ]; then
+              lockfile=package-lock.json
+            fi
+          fi
+
+          if [ -n "$lockfile" ]; then
+            directory="$(dirname "$lockfile")"
+          fi
+
+          case "$(basename "$lockfile")" in
+            pnpm-lock.yaml) package_manager=pnpm ;;
+            *) package_manager=npm ;;
+          esac
+
+          echo "lockfile=$lockfile" >> "$GITHUB_OUTPUT"
+          echo "directory=$directory" >> "$GITHUB_OUTPUT"
+          echo "package_manager=$package_manager" >> "$GITHUB_OUTPUT"
+          if [ -f "$directory/knip.jsonc" ]; then
+            echo "knip=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: biomejs/setup-biome@4c91541eaada48f67d7dbd7833600ce162b68f51 # v2.7.1
       - run: biome ci --indent-style=space --line-width=119 ${{ inputs.filenames }}
-      - if: ${{ inputs.lockfile_path != 'package-lock.json' || hashFiles('package.json') != '' }}
-        run: npx lockfile-lint --path ${{ inputs.lockfile_path }} ${{ inputs.lockfile_lint_args }}
+      - if: ${{ steps.setup.outputs.package_manager == 'npm' && steps.setup.outputs.lockfile != '' }}
+        run: npx lockfile-lint --path ${{ steps.setup.outputs.lockfile }} --type ${{ steps.setup.outputs.package_manager }} ${{ inputs.lockfile_lint_args }}
+
+      - if: ${{ steps.setup.outputs.knip == 'true' && steps.setup.outputs.package_manager == 'pnpm' }}
+        uses: pnpm/action-setup@v6
+        with:
+          package_json_file: ${{ steps.setup.outputs.directory }}/package.json
+      - if: ${{ steps.setup.outputs.knip == 'true' }}
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: ${{ steps.setup.outputs.package_manager }}
+          cache-dependency-path: ${{ steps.setup.outputs.lockfile }}
+
+      - if: ${{ steps.setup.outputs.knip == 'true' && steps.setup.outputs.package_manager == 'pnpm' }}
+        working-directory: ${{ steps.setup.outputs.directory }}
+        run: pnpm install --frozen-lockfile --ignore-scripts
+      - if: ${{ steps.setup.outputs.knip == 'true' && steps.setup.outputs.package_manager == 'npm' }}
+        working-directory: ${{ steps.setup.outputs.directory }}
+        run: npm ci --ignore-scripts
+
+      - if: ${{ steps.setup.outputs.knip == 'true' && steps.setup.outputs.package_manager == 'pnpm' }}
+        working-directory: ${{ steps.setup.outputs.directory }}
+        run: pnpm exec knip
+      - if: ${{ steps.setup.outputs.knip == 'true' && steps.setup.outputs.package_manager == 'npm' }}
+        working-directory: ${{ steps.setup.outputs.directory }}
+        run: npx knip
