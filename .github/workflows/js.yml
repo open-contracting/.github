@@ -2,10 +2,6 @@ name: Lint JavaScript
 on:
   workflow_call:
     inputs:
-      filenames:
-        description: Space-separated list of filenames to which to limit Biome.
-        type: string
-        default: '.'
       lockfile_path:
         description: >-
           Path to the lockfile. Set this if the JavaScript project is in a
@@ -54,8 +50,6 @@ jobs:
             echo "knip=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - uses: biomejs/setup-biome@4c91541eaada48f67d7dbd7833600ce162b68f51 # v2.7.1
-      - run: biome ci --indent-style=space --line-width=119 ${{ inputs.filenames }}
       - if: ${{ steps.setup.outputs.package_manager == 'npm' && steps.setup.outputs.lockfile != '' }}
         run: npx lockfile-lint --path ${{ steps.setup.outputs.lockfile }} --type ${{ steps.setup.outputs.package_manager }} ${{ inputs.lockfile_lint_args }}
 
