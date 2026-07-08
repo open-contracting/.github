@@ -19,6 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.0
+      - run: git config --global url."https://github.com/".insteadOf "git@github.com:"
       - name: Detect the JavaScript project's directory, package manager, and lockfile
         id: setup
         shell: bash
