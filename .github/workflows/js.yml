@@ -59,7 +59,7 @@ jobs:
         with:
           package_json_file: ${{ steps.setup.outputs.directory }}/package.json
       - if: ${{ steps.setup.outputs.knip == 'true' }}
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v6.4.0
         with:
           node-version: 22
           cache: ${{ steps.setup.outputs.package_manager }}
