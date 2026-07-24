@@ -101,6 +101,8 @@ jobs:
 
       - if: ${{ !steps.requirements.outputs.package && !steps.requirements.outputs.compile }}
         uses: actions/setup-python@v6.3.0
+        with:
+          python-version: '3.x'
       - if: ${{ steps.requirements.outputs.package || steps.requirements.outputs.compile }}
         uses: actions/setup-python@v6.3.0
         with:

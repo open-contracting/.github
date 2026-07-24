@@ -18,11 +18,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
+      - id: requirements
+        run: echo "package=$(echo ${{ hashFiles('MANIFEST.in') }})" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-python@v6.3.0
         with:
-          python-version-file: .python-version
+          python-version-file: ${{ steps.requirements.outputs.package && 'pyproject.toml' || '.python-version' }}
           cache: pip
-          cache-dependency-path: '**/requirements*.txt'
+          cache-dependency-path: ${{ steps.requirements.outputs.package && 'pyproject.toml' || '**/requirements*.txt' }}
       - name: Install translate-toolkit
         run: |
           sudo apt update
