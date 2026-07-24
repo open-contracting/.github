@@ -2,20 +2,17 @@ name: Translations
 on:
   workflow_call:
     inputs:
-      python-version:
-        type: string
-        default: '3.11'
       command:
         description: The command(s) to extract messages and update catalogs.
         type: string
         required: true
+      dependencies:
+        description: Any command-line options or arguments to `pip install`, needed by the command(s).
+        type: string
       working-directory:
         description: The working directory from which to run the command(s).
         type: string
         default: .
-      dependencies:
-        description: Any command-line options or arguments to `pip install`, needed by the command(s).
-        type: string
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -23,7 +20,9 @@ jobs:
       - uses: actions/checkout@v7.0.1
       - uses: actions/setup-python@v6.3.0
         with:
-          python-version: '${{ inputs.python-version }}'
+          python-version-file: .python-version
+          cache: pip
+          cache-dependency-path: '**/requirements*.txt'
       - name: Install translate-toolkit
         run: |
           sudo apt update
