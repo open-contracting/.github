@@ -39,9 +39,6 @@ name: Lint
 on:
   workflow_call:
     inputs:
-      python-version:
-        type: string
-        default: '3.11'
       standard-maintenance-scripts-extras:
         description: Sets the STANDARD_MAINTENANCE_SCRIPTS_EXTRAS environment variable for standard-maintenance-scripts' requirements linter.
         type: string
@@ -102,32 +99,29 @@ jobs:
           echo "package=$(echo ${{ hashFiles('MANIFEST.in') }})" >> "$GITHUB_OUTPUT"
           echo "compile=$(echo ${{ hashFiles('requirements_dev.txt') }})" >> "$GITHUB_OUTPUT"
 
-      # Install Python and configure cache.
-      - if: ${{ !steps.requirements.package && !steps.requirements.compile }}
+      - if: ${{ !steps.requirements.outputs.package && !steps.requirements.outputs.compile }}
+        uses: actions/setup-python@v6.3.0
+      - if: ${{ steps.requirements.outputs.package || steps.requirements.outputs.compile }}
         uses: actions/setup-python@v6.3.0
         with:
-          python-version: '${{ inputs.python-version }}'
-      - if: ${{ steps.requirements.package || steps.requirements.compile }}
-        uses: actions/setup-python@v6.3.0
-        with:
-          python-version: '${{ inputs.python-version }}'
+          python-version-file: ${{ steps.requirements.outputs.package && 'pyproject.toml' || '.python-version' }}
           cache: pip
-          cache-dependency-path: "${{ steps.requirements.package && 'pyproject.toml' || '**/requirements*.txt' }}"
+          cache-dependency-path: "${{ steps.requirements.outputs.package && 'pyproject.toml' || '**/requirements*.txt' }}"
 
       # Pre-lint commands.
       - if: ${{ inputs.before-lint }}
         run: ${{ inputs.before-lint }}
 
       # Run pip-compile pre-commit hook, which requires the network and therefore is skipped on pre-commit.ci.
-      - if: ${{ steps.requirements.compile }}
+      - if: ${{ steps.requirements.outputs.compile }}
         id: changed-files
         uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96 # v47.0.6
-      - if: ${{ steps.requirements.compile }}
+      - if: ${{ steps.requirements.outputs.compile }}
         uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
         continue-on-error: true
         with:
           extra_args: pip-compile --files ${{ steps.changed-files.outputs.all_changed_files }}
-      - if: ${{ steps.requirements.compile }}
+      - if: ${{ steps.requirements.outputs.compile }}
         uses: stefanzweifel/git-auto-commit-action@4a55954c782fc1ea30b9056cd3e7a2b40ca8887d # v7.2.0
         with:
           commit_message: '[github-actions] pre-commit autoupdate'
@@ -141,11 +135,11 @@ jobs:
         run: curl -s -S --retry 3 $BASEDIR/tests/script.sh | bash -
 
       # Run standard-maintenance-scripts requirements linter.
-      - if: ${{ !inputs.skip-linter-requirements && steps.requirements.package }}
+      - if: ${{ !inputs.skip-linter-requirements && steps.requirements.outputs.package }}
         run: pip install .[${{ inputs.standard-maintenance-scripts-extras && format('{0},', inputs.standard-maintenance-scripts-extras) || '' }}test]
-      - if: ${{ !inputs.skip-linter-requirements && steps.requirements.compile }}
+      - if: ${{ !inputs.skip-linter-requirements && steps.requirements.outputs.compile }}
         run: pip install -r requirements_dev.txt
-      - if: ${{ !inputs.skip-linter-requirements && (steps.requirements.package || steps.requirements.compile) }}
+      - if: ${{ !inputs.skip-linter-requirements && (steps.requirements.outputs.package || steps.requirements.outputs.compile) }}
         env:
           STANDARD_MAINTENANCE_SCRIPTS_EXTRAS: ${{ inputs.standard-maintenance-scripts-extras }}
           STANDARD_MAINTENANCE_SCRIPTS_IGNORE: ${{ inputs.standard-maintenance-scripts-ignore }}
@@ -153,9 +147,9 @@ jobs:
         run: pytest /tmp/test_requirements.py
 
       # Run check-manifest.
-      - if: ${{ steps.requirements.package }}
+      - if: ${{ steps.requirements.outputs.package }}
         run: pip install --upgrade check-manifest
-      - if: ${{ steps.requirements.package }}
+      - if: ${{ steps.requirements.outputs.package }}
         run: check-manifest
     services:
       httpbin:
