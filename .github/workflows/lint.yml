@@ -100,11 +100,11 @@ jobs:
           echo "compile=$(echo ${{ hashFiles('requirements_dev.txt') }})" >> "$GITHUB_OUTPUT"
 
       - if: ${{ !steps.requirements.outputs.package && !steps.requirements.outputs.compile }}
-        uses: actions/setup-python@v6.3.0
+        uses: actions/setup-python@v7.0.0
         with:
           python-version: '3.x'
       - if: ${{ steps.requirements.outputs.package || steps.requirements.outputs.compile }}
-        uses: actions/setup-python@v6.3.0
+        uses: actions/setup-python@v7.0.0
         with:
           python-version-file: ${{ steps.requirements.outputs.package && 'pyproject.toml' || '.python-version' }}
           cache: pip
