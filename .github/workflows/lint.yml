@@ -11,6 +11,7 @@
 #
 # - package, then the check-manifest command is run.
 # - application, then the pip-compile pre-commit hook is run, and any changed files are auto-committed.
+#   A push whose commit messages contain "[skip pip-compile]" is unchanged.
 #
 # In all cases, the standard-maintenance-scripts language linters are run.
 #
@@ -85,6 +86,8 @@ env:
   OCDS_EXTENSION_PATHS: '${{ inputs.ocds-extension-paths }}'
   OCDS_SCHEMA_EXCEPTIONS: '${{ inputs.ocds-schema-exceptions }}'
   OCDS_DISALLOW_NULL: ${{ inputs.ocds-disallow-null && '1' || '' }}
+  # A release newer than uv's exclude-newer cooldown window can only be manually pinned. Don't overwrite it.
+  SKIP_PIP_COMPILE: ${{ contains(join(github.event.commits.*.message), '[skip pip-compile]') }}
 jobs:
   build:
     if: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository }}
@@ -118,12 +121,12 @@ jobs:
       - if: ${{ steps.requirements.outputs.compile }}
         id: changed-files
         uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96 # v47.0.6
-      - if: ${{ steps.requirements.outputs.compile }}
+      - if: ${{ steps.requirements.outputs.compile && env.SKIP_PIP_COMPILE != 'true' }}
         uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
         continue-on-error: true
         with:
           extra_args: pip-compile --files ${{ steps.changed-files.outputs.all_changed_files }}
-      - if: ${{ steps.requirements.outputs.compile }}
+      - if: ${{ steps.requirements.outputs.compile && env.SKIP_PIP_COMPILE != 'true' }}
         uses: stefanzweifel/git-auto-commit-action@4a55954c782fc1ea30b9056cd3e7a2b40ca8887d # v7.2.0
         with:
           commit_message: '[github-actions] pre-commit autoupdate'
