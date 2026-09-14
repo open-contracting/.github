@@ -55,7 +55,7 @@ jobs:
         run: npx lockfile-lint --path ${{ steps.setup.outputs.lockfile }} --type ${{ steps.setup.outputs.package_manager }} ${{ inputs.lockfile_lint_args }}
 
       - if: ${{ steps.setup.outputs.knip == 'true' && steps.setup.outputs.package_manager == 'pnpm' }}
-        uses: pnpm/action-setup@v6.0.10
+        uses: pnpm/action-setup@v6.1.0
         with:
           package_json_file: ${{ steps.setup.outputs.directory }}/package.json
       - if: ${{ steps.setup.outputs.knip == 'true' }}
