@@ -24,8 +24,9 @@
 #     uses: open-contracting/.github/.github/workflows/lint.yml@main
 #     permissions:
 #       contents: write
-#    secrets:
-#      personal-access-token: ${{ secrets.PAT }}
+#     secrets:
+#       client-id: ${{ secrets.APP_CLIENT_ID }}
+#       private-key: ${{ secrets.APP_PRIVATE_KEY }}
 #
 # Otherwise, set `contents: read`:
 #
@@ -77,8 +78,10 @@ on:
         description: Any command to run before linting.
         type: string
     secrets:
-      personal-access-token:
-        description: The personal access token of a user with admin permissions to this repository, in order to write to protected branches.
+      client-id:
+        description: The client ID of a GitHub App with a Contents permission of Read and write, allowed to bypass branch protection, in order to push to protected branches.
+      private-key:
+        description: The private key of the GitHub App.
 env:
   BASEDIR: ${{ inputs.local-basedir && format('file://{0}', github.workspace) || 'https://raw.githubusercontent.com/open-contracting/standard-maintenance-scripts/main' }}
   OCDS_NOINDENT: '${{ inputs.ocds-noindent }}'
@@ -88,14 +91,22 @@ env:
   OCDS_DISALLOW_NULL: ${{ inputs.ocds-disallow-null && '1' || '' }}
   # A release newer than uv's exclude-newer cooldown window can only be manually pinned. Don't overwrite it.
   SKIP_PIP_COMPILE: ${{ contains(join(github.event.commits.*.message), '[skip pip-compile]') }}
+  # The `secrets` context is unavailable in a step's `if`.
+  HAS_GITHUB_APP: ${{ secrets.private-key != '' }}
 jobs:
   build:
     if: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository }}
     runs-on: ubuntu-latest
     steps:
+      - if: ${{ env.HAS_GITHUB_APP == 'true' }}
+        id: app-token
+        uses: actions/create-github-app-token@v3.2.0
+        with:
+          client-id: ${{ secrets.client-id }}
+          private-key: ${{ secrets.private-key }}
       - uses: actions/checkout@v7.0.1
         with:
-          token: ${{ secrets.personal-access-token || github.token }}
+          token: ${{ steps.app-token.outputs.token || github.token }}
 
       - id: requirements
         run: |
