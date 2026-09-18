@@ -79,7 +79,7 @@ on:
         type: string
     secrets:
       client-id:
-        description: The client ID of a GitHub App with a Contents permission of Read and write, allowed to bypass branch protection, in order to push to protected branches.
+        description: The client ID of a GitHub App with a Contents permission of Read and write, and a bypass entry in the branch's rulesets.
       private-key:
         description: The private key of the GitHub App.
 env:
