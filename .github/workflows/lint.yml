@@ -124,10 +124,6 @@ jobs:
           cache: pip
           cache-dependency-path: "${{ steps.requirements.outputs.package && 'pyproject.toml' || '**/requirements*.txt' }}"
 
-      # Pre-lint commands.
-      - if: ${{ inputs.before-lint }}
-        run: ${{ inputs.before-lint }}
-
       # Run pip-compile pre-commit hook, which requires the network and therefore is skipped on pre-commit.ci.
       - if: ${{ steps.requirements.outputs.compile }}
         id: changed-files
@@ -141,6 +137,10 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@4a55954c782fc1ea30b9056cd3e7a2b40ca8887d # v7.2.0
         with:
           commit_message: '[github-actions] pre-commit autoupdate'
+
+      # Pre-lint commands.
+      - if: ${{ inputs.before-lint }}
+        run: ${{ inputs.before-lint }}
 
       # Run standard-maintenance-scripts language linters.
       - if: ${{ !inputs.skip-linter-language || !inputs.skip-linter-requirements }}
