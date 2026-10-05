@@ -51,18 +51,18 @@ jobs:
           find . \( -name output.json -o -name output.txt \) -exec rm -r "{}" \;
       - run: pytest -W error ${{ inputs.pytest-options }}
       # Deploy the built documentation to the staging directory.
-      - if: ${{ github.event_name == 'push' }}
+      - if: ${{ github.event_name == 'push' && github.actor != 'dependabot[bot]' }}
         uses: shimataro/ssh-key-action@87a8f067114a8ce263df83e9ed5c849953548bc3 # v2.8.1
         with:
           key: ${{ secrets.private-key }}
           known_hosts: ocp19.open-contracting.org ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGveFGTJ9yyObNGDUCUyzyFkm6Kzh3YqIt1qB7B/KU6E
-      - if: ${{ github.event_name == 'push' }}
+      - if: ${{ github.event_name == 'push' && github.actor != 'dependabot[bot]' }}
         uses: bcomnes/netrc-creds@5f48abcd603d4fb3378c11e2a2f6067c1e4b4a70 # v4.0.2
         with:
           machine: standard.open-contracting.org
           login: manage
           password: ${{ secrets.elasticsearch-password }}
-      - if: ${{ github.event_name == 'push' && success() && github.repository != 'open-contracting/standard_profile_template' }}
+      - if: ${{ github.event_name == 'push' && github.actor != 'dependabot[bot]' && success() && github.repository != 'open-contracting/standard_profile_template' }}
         env:
           PATH_PREFIX: ${{ inputs.path-prefix }}
           PRODUCTION: ${{ startsWith(github.ref, 'refs/tags') || github.ref == 'refs/heads/latest' || contains(fromJSON(inputs.production-refs), github.ref) }}
