@@ -100,7 +100,7 @@ jobs:
     steps:
       - if: ${{ env.HAS_GITHUB_APP == 'true' }}
         id: app-token
-        uses: actions/create-github-app-token@v3.2.0
+        uses: actions/create-github-app-token@v3.3.0
         with:
           client-id: ${{ secrets.client-id }}
           private-key: ${{ secrets.private-key }}
