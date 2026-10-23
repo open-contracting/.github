@@ -11,7 +11,7 @@
 #
 # - package, then the check-manifest command is run.
 # - application, then the pip-compile pre-commit hook is run, and any changed files are auto-committed.
-#   A push whose commit messages contain "[skip pip-compile]" is unchanged.
+#   A push whose commit messages contain "[skip pip-compile]", or that contains a commit by Dependabot, is unchanged.
 #
 # In all cases, the standard-maintenance-scripts language linters are run.
 #
@@ -90,7 +90,8 @@ env:
   OCDS_SCHEMA_EXCEPTIONS: '${{ inputs.ocds-schema-exceptions }}'
   OCDS_DISALLOW_NULL: ${{ inputs.ocds-disallow-null && '1' || '' }}
   # A release newer than uv's exclude-newer cooldown window can only be manually pinned. Don't overwrite it.
-  SKIP_PIP_COMPILE: ${{ contains(join(github.event.commits.*.message), '[skip pip-compile]') }}
+  # Dependabot's security updates ignore the cooldown, and its version updates can use a different cooldown.
+  SKIP_PIP_COMPILE: ${{ contains(join(github.event.commits.*.message), '[skip pip-compile]') || contains(github.event.commits.*.author.username, 'dependabot[bot]') }}
   # The `secrets` context is unavailable in a step's `if`.
   HAS_GITHUB_APP: ${{ secrets.private-key != '' }}
 jobs:
