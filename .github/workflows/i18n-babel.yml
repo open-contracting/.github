@@ -24,7 +24,7 @@ jobs:
       - uses: actions/checkout@v7.0.1
       - id: requirements
         run: echo "package=$(echo ${{ hashFiles('MANIFEST.in') }})" >> "$GITHUB_OUTPUT"
-      - uses: actions/setup-python@v7.0.0
+      - uses: actions/setup-python@v7.1.0
         with:
           python-version-file: ${{ steps.requirements.outputs.package && 'pyproject.toml' || '.python-version' }}
           cache: pip
