@@ -18,6 +18,7 @@ jobs:
       - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           push: true
+          context: .
           file: Dockerfile_app
           tags: |
             ghcr.io/${{ github.repository }}-app:latest
@@ -26,6 +27,7 @@ jobs:
       - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           push: true
+          context: .
           file: Dockerfile_static
           tags: |
             ghcr.io/${{ github.repository }}-static:latest
