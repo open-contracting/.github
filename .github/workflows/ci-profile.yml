@@ -71,4 +71,4 @@ jobs:
           RELEASE: ${{ startsWith(github.ref, 'refs/tags') }}
           VERSION: '${{ inputs.version }}'
         shell: bash
-        run: curl -sS https://raw.githubusercontent.com/open-contracting/deploy/main/deploy-docs.sh | bash -
+        run: curl -sSf https://raw.githubusercontent.com/open-contracting/deploy/main/deploy-docs.sh | bash -
