@@ -9,16 +9,23 @@ on:
       djangojs:
         description: Whether to extract messages for the djangojs domain.
         type: boolean
+      working-directory:
+        description: The directory of the Django project.
+        type: string
+        default: .
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: actions/setup-python@v7.1.0
         with:
-          python-version-file: .python-version
+          python-version-file: ${{ inputs.working-directory }}/.python-version
           cache: pip
-          cache-dependency-path: requirements*.txt
+          cache-dependency-path: ${{ inputs.working-directory }}/requirements*.txt
       - name: Install translate-toolkit
         shell: bash
         run: |
