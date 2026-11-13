@@ -3,7 +3,7 @@
 # A repository is a Python...:
 #
 # - package if it contains MANIFEST.in
-# - application if it contains requirements_dev.txt
+# - application if it contains requirements.in or requirements_dev.txt
 #
 # If it is either, a Python cache is configured, and the standard-maintenance-scripts requirements linter is run.
 #
@@ -14,6 +14,9 @@
 #   A push whose commit messages contain "[skip pip-compile]", or that contains a commit by Dependabot, is unchanged.
 #
 # In all cases, the standard-maintenance-scripts language linters are run.
+#
+# The same logic identifies any top-level directories as packages or applications. For each, the requirements linter
+# and check-manifest command are run.
 #
 # For Python *applications*, set `contents: write`:
 #
@@ -77,6 +80,10 @@ on:
       before-lint:
         description: Any command to run before linting.
         type: string
+      # https://pip.pypa.io/en/stable/cli/pip_index/#cmdoption-extra-index-url
+      pip-extra-index-url:
+        description: Sets the PIP_EXTRA_INDEX_URL environment variable.
+        type: string
     secrets:
       client-id:
         description: The client ID of a GitHub App with a Contents permission of Read and write, and a bypass entry in the branch's rulesets.
@@ -89,14 +96,15 @@ env:
   OCDS_EXTENSION_PATHS: '${{ inputs.ocds-extension-paths }}'
   OCDS_SCHEMA_EXCEPTIONS: '${{ inputs.ocds-schema-exceptions }}'
   OCDS_DISALLOW_NULL: ${{ inputs.ocds-disallow-null && '1' || '' }}
+  PIP_EXTRA_INDEX_URL: '${{ inputs.pip-extra-index-url }}'
   # A release newer than uv's exclude-newer cooldown window can only be manually pinned. Don't overwrite it.
   # Dependabot's security updates ignore the cooldown, and its version updates can use a different cooldown.
   SKIP_PIP_COMPILE: ${{ contains(join(github.event.commits.*.message), '[skip pip-compile]') || contains(github.event.commits.*.author.username, 'dependabot[bot]') }}
   # The `secrets` context is unavailable in a step's `if`.
   HAS_GITHUB_APP: ${{ secrets.private-key != '' }}
 jobs:
-  build:
-    if: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository }}
+  root:
+    if: ${{ (github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository) }}
     runs-on: ubuntu-latest
     steps:
       - if: ${{ env.HAS_GITHUB_APP == 'true' }}
@@ -113,13 +121,14 @@ jobs:
         shell: bash
         run: |
           echo "package=$(echo ${{ hashFiles('MANIFEST.in') }})" >> "$GITHUB_OUTPUT"
-          echo "compile=$(echo ${{ hashFiles('requirements_dev.txt') }})" >> "$GITHUB_OUTPUT"
+          echo "application=$(echo ${{ hashFiles('requirements.in', 'requirements_dev.txt') }})" >> "$GITHUB_OUTPUT"
+          echo "requirements_dev=$(echo ${{ hashFiles('requirements_dev.txt') }})" >> "$GITHUB_OUTPUT"
 
-      - if: ${{ !steps.requirements.outputs.package && !steps.requirements.outputs.compile }}
+      - if: ${{ !steps.requirements.outputs.package && !steps.requirements.outputs.application }}
         uses: actions/setup-python@v7.1.0
         with:
           python-version: '3.x'
-      - if: ${{ steps.requirements.outputs.package || steps.requirements.outputs.compile }}
+      - if: ${{ steps.requirements.outputs.package || steps.requirements.outputs.application }}
         uses: actions/setup-python@v7.1.0
         with:
           python-version-file: ${{ steps.requirements.outputs.package && 'pyproject.toml' || '.python-version' }}
@@ -127,15 +136,15 @@ jobs:
           cache-dependency-path: "${{ steps.requirements.outputs.package && 'pyproject.toml' || '**/requirements*.txt' }}"
 
       # Run pip-compile pre-commit hook, which requires the network and therefore is skipped on pre-commit.ci.
-      - if: ${{ steps.requirements.outputs.compile }}
+      - if: ${{ steps.requirements.outputs.application }}
         id: changed-files
         uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96 # v47.0.6
-      - if: ${{ steps.requirements.outputs.compile && env.SKIP_PIP_COMPILE != 'true' }}
+      - if: ${{ steps.requirements.outputs.application && env.SKIP_PIP_COMPILE != 'true' }}
         uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
         continue-on-error: true
         with:
           extra_args: pip-compile --files ${{ steps.changed-files.outputs.all_changed_files }}
-      - if: ${{ steps.requirements.outputs.compile && env.SKIP_PIP_COMPILE != 'true' }}
+      - if: ${{ steps.requirements.outputs.application && env.SKIP_PIP_COMPILE != 'true' }}
         uses: stefanzweifel/git-auto-commit-action@d0b01107b5db882071f96de5dd4b54961ea93f4c # v7.2.1
         with:
           commit_message: '[github-actions] pre-commit autoupdate'
@@ -155,9 +164,11 @@ jobs:
       # Run standard-maintenance-scripts requirements linter.
       - if: ${{ !inputs.skip-linter-requirements && steps.requirements.outputs.package }}
         run: pip install .[${{ inputs.standard-maintenance-scripts-extras && format('{0},', inputs.standard-maintenance-scripts-extras) || '' }}test]
-      - if: ${{ !inputs.skip-linter-requirements && steps.requirements.outputs.compile }}
+      - if: ${{ !inputs.skip-linter-requirements && steps.requirements.outputs.application && steps.requirements.outputs.requirements_dev }}
         run: pip install -r requirements_dev.txt
-      - if: ${{ !inputs.skip-linter-requirements && (steps.requirements.outputs.package || steps.requirements.outputs.compile) }}
+      - if: ${{ !inputs.skip-linter-requirements && steps.requirements.outputs.application && !steps.requirements.outputs.requirements_dev }}
+        run: pip install -r requirements.txt
+      - if: ${{ !inputs.skip-linter-requirements && (steps.requirements.outputs.package || steps.requirements.outputs.application) }}
         env:
           STANDARD_MAINTENANCE_SCRIPTS_EXTRAS: ${{ inputs.standard-maintenance-scripts-extras }}
           STANDARD_MAINTENANCE_SCRIPTS_IGNORE: ${{ inputs.standard-maintenance-scripts-ignore }}
@@ -174,3 +185,65 @@ jobs:
         image: mccutchen/go-httpbin:latest
         ports:
           - 8080:8080
+  discover:
+    if: ${{ (github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository) && !inputs.skip-linter-requirements }}
+    runs-on: ubuntu-latest
+    outputs:
+      subprojects: ${{ steps.subprojects.outputs.subprojects }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - id: subprojects
+        shell: bash
+        run: |
+          shopt -s nullglob
+          subprojects=$(
+            printf '%s\n' */MANIFEST.in */requirements.in */requirements_dev.txt |
+            jq -R -n -c '[inputs | select(length > 0) | split("/")] | group_by(.[0]) | map({
+              directory: .[0][0],
+              package: any(.[]; .[1] == "MANIFEST.in"),
+              application: any(.[]; .[1] == "requirements.in" or .[1] == "requirements_dev.txt"),
+              requirements_dev: any(.[]; .[1] == "requirements_dev.txt")
+            })'
+          )
+          echo "subprojects=$subprojects" >> "$GITHUB_OUTPUT"
+  subproject:
+    needs: discover
+    if: ${{ needs.discover.outputs.subprojects != '[]' }}
+    name: subproject (${{ matrix.directory }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.discover.outputs.subprojects) }}
+    defaults:
+      run:
+        working-directory: ${{ matrix.directory }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v7.1.0
+        with:
+          # An application can use the repository's .python-version.
+          python-version-file: ${{ matrix.package && format('{0}/pyproject.toml', matrix.directory) || hashFiles(format('{0}/.python-version', matrix.directory)) && format('{0}/.python-version', matrix.directory) || '.python-version' }}
+          cache: pip
+          cache-dependency-path: ${{ matrix.directory }}/${{ matrix.package && 'pyproject.toml' || 'requirements*.txt' }}
+      - shell: bash
+        run: curl -sSf --retry 3 $BASEDIR/tests/install.sh | bash -
+      - if: ${{ matrix.package }}
+        run: pip install .[test]
+      - if: ${{ matrix.application && matrix.requirements_dev }}
+        run: pip install -r requirements_dev.txt
+      - if: ${{ matrix.application && !matrix.requirements_dev }}
+        run: pip install -r requirements.txt
+      - run: pytest /tmp/test_requirements.py
+      - if: ${{ matrix.package }}
+        run: pip install --upgrade check-manifest
+      - if: ${{ matrix.package }}
+        run: check-manifest
+  # Without `if: always()`, a failed dependency would skip `build`, and a skipped job satisfies a required status check.
+  build:
+    needs: [root, discover, subproject]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+        run: exit 1
