@@ -32,6 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Disable AppArmor  # https://chromium.googlesource.com/chromium/src/+/main/docs/security/apparmor-userns-restrictions.md
+        shell: bash
         run: echo 0 | sudo tee /proc/sys/kernel/apparmor_restrict_unprivileged_userns
       - uses: actions/checkout@v7.0.1
         with:
@@ -46,6 +47,7 @@ jobs:
         run: make update extract
       - run: make
       - if: ${{ inputs.linkcheck }}
+        shell: bash
         run: |
           make linkcheck
           find . \( -name output.json -o -name output.txt \) -exec rm -r "{}" \;

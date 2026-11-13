@@ -110,6 +110,7 @@ jobs:
           token: ${{ steps.app-token.outputs.token || github.token }}
 
       - id: requirements
+        shell: bash
         run: |
           echo "package=$(echo ${{ hashFiles('MANIFEST.in') }})" >> "$GITHUB_OUTPUT"
           echo "compile=$(echo ${{ hashFiles('requirements_dev.txt') }})" >> "$GITHUB_OUTPUT"

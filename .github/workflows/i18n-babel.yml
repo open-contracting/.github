@@ -30,6 +30,7 @@ jobs:
           cache: pip
           cache-dependency-path: "${{ steps.requirements.outputs.package && 'pyproject.toml' || '**/requirements*.txt' }}"
       - name: Install translate-toolkit
+        shell: bash
         run: |
           sudo apt update
           sudo apt install translate-toolkit

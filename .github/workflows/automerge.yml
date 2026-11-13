@@ -36,6 +36,7 @@ jobs:
         env:
           PREVIOUS_VERSION: ${{ steps.dependabot-metadata.outputs.previous-version }}
           NEW_VERSION: ${{ steps.dependabot-metadata.outputs.new-version }}
+        shell: bash
         run: |
           if [[ "$PREVIOUS_VERSION" =~ ^20[0-9]{2}\. && "$NEW_VERSION" =~ ^20[0-9]{2}\. ]]; then
             echo "calver=true" >> "$GITHUB_OUTPUT"

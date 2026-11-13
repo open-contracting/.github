@@ -20,6 +20,7 @@ jobs:
           cache: pip
           cache-dependency-path: '**/requirements*.txt'
       - name: Install translate-toolkit
+        shell: bash
         run: |
           sudo apt update
           sudo apt install gettext translate-toolkit
